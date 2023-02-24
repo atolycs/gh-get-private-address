@@ -1,7 +1,32 @@
 #!/usr/bin/env bash
 set -e
 
-exec gh api /user/public_emails \
-	--jq '.[].email' | \
-	sed -ne '/users.noreply.github.com/p'
+__toplevelDir=$(git rev-parse --show-toplevel)
 
+__setEmail(){
+  local _opt=""
+  if [[ -z "${__toplevelDir}" ]];then
+    echo "Set Global Configuration"
+    echo "Run Command: git config --global user.email \"${1}\""
+    _opt="--global"
+  else
+    echo "Set Local Repository Configuration"
+    echo "Run Command: git config --local user.email \"${1}\""
+    _opt="--local"
+  fi
+
+  git config ${_opt} user.email "${1}"
+}
+
+__email=$(gh api /user/public_emails \
+	--jq '.[].email' | \
+	sed -ne '/users.noreply.github.com/p')
+
+echo "Get Private Email: ${__email}"
+
+read -p "Set Commit Address [y/N]" _question
+
+case "${_question,,}" in
+	y|yes) __setEmail ${__email};;
+	*) ;;
+esac
