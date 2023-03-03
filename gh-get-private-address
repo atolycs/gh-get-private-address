@@ -1,19 +1,15 @@
 #!/usr/bin/env bash
 set -e
 
-__toplevelDir=$(git rev-parse --show-toplevel)
-
 __setEmail(){
   local _opt=""
-  if [[ -z "${__toplevelDir}" ]];then
-    echo "Set Global Configuration"
-    echo "Run Command: git config --global user.email \"${1}\""
-    _opt="--global"
-  else
-    echo "Set Local Repository Configuration"
-    echo "Run Command: git config --local user.email \"${1}\""
+  if git rev-parse --is-inside-work-tree 2> /dev/null ;then
     _opt="--local"
+  else
+    _opt="--global"
   fi
+  echo "Set Repository Configuration on ${_opt#--}"
+  echo "Run Command: git config ${_opt} user.email \"${1}\""
 
   git config ${_opt} user.email "${1}"
 }
